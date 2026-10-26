@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Market Rain — Stock Terminal",
+  "short_name": "Market Rain",
+  "description": "Matrix-style market data visualisation, watchlist and stock research terminal.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone"],
+  "background_color": "#040809",
+  "theme_color": "#050a0a",
+  "orientation": "any",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {"src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

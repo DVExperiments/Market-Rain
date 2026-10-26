@@ -1,0 +1,13 @@
+{
+  "name": "Market Rain",
+  "version": "1.0.0",
+  "categories": [
+    {"id":"technology","label":"TECHNOLOGY","short":"TECH","tickers":[{"symbol":"AAPL","name":"Apple"},{"symbol":"MSFT","name":"Microsoft"},{"symbol":"NVDA","name":"NVIDIA"},{"symbol":"GOOGL","name":"Alphabet"},{"symbol":"AMD","name":"AMD"}]},
+    {"id":"finance","label":"FINANCIALS","short":"FIN","tickers":[{"symbol":"JPM","name":"JPMorgan Chase"},{"symbol":"V","name":"Visa"},{"symbol":"MA","name":"Mastercard"},{"symbol":"BAC","name":"Bank of America"},{"symbol":"BRK-B","name":"Berkshire Hathaway B"}]},
+    {"id":"energy","label":"ENERGY","short":"NRG","tickers":[{"symbol":"XOM","name":"Exxon Mobil"},{"symbol":"CVX","name":"Chevron"},{"symbol":"SHEL","name":"Shell"},{"symbol":"NEE","name":"NextEra Energy"},{"symbol":"BP","name":"BP"}]},
+    {"id":"healthcare","label":"HEALTHCARE","short":"HLTH","tickers":[{"symbol":"JNJ","name":"Johnson & Johnson"},{"symbol":"UNH","name":"UnitedHealth"},{"symbol":"LLY","name":"Eli Lilly"},{"symbol":"PFE","name":"Pfizer"},{"symbol":"MRK","name":"Merck"}]},
+    {"id":"consumer","label":"CONSUMER","short":"CONS","tickers":[{"symbol":"AMZN","name":"Amazon"},{"symbol":"TSLA","name":"Tesla"},{"symbol":"COST","name":"Costco"},{"symbol":"KO","name":"Coca-Cola"},{"symbol":"MCD","name":"McDonald's"}]},
+    {"id":"industrial","label":"INDUSTRIALS","short":"IND","tickers":[{"symbol":"CAT","name":"Caterpillar"},{"symbol":"GE","name":"GE Aerospace"},{"symbol":"HON","name":"Honeywell"},{"symbol":"UPS","name":"UPS"},{"symbol":"DE","name":"Deere & Co."}]},
+    {"id":"newzealand","label":"NEW ZEALAND","short":"NZX","tickers":[{"symbol":"FPH.NZ","name":"Fisher & Paykel Healthcare"},{"symbol":"AIA.NZ","name":"Auckland Airport"},{"symbol":"SPK.NZ","name":"Spark New Zealand"},{"symbol":"MEL.NZ","name":"Meridian Energy"},{"symbol":"AIR.NZ","name":"Air New Zealand"}]}
+  ]
+}

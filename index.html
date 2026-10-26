@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050a0a">
+  <meta name="description" content="Market Rain: a falling-code visualisation of market snapshots, personal watchlists and stock research.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Market Rain">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/svg+xml" href="./icons/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <title>MARKET RAIN // MARKET INTELLIGENCE TERMINAL</title>
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div class="identity">
+        <div class="mark" aria-hidden="true"><span>M</span><span>R</span></div>
+        <div class="brand"><div class="brand-name">MARKET<span>RAIN</span><sup>1.0</sup></div><div class="brand-sub">STOCK INTELLIGENCE // VISUAL TERMINAL</div></div>
+      </div>
+      <div class="top-status"><span class="pulse-dot"></span><span id="sourceFlag">INITIALISING</span><span class="status-separator">/</span><span id="lastUpdated">LOADING DATA</span></div>
+      <div class="top-actions">
+        <button id="pauseButton" class="icon-button" type="button" title="Pause motion (P)" aria-label="Pause animation">Ⅱ</button>
+        <button id="settingsButton" class="icon-button" type="button" title="Display settings" aria-label="Display settings">⚙</button>
+        <button id="installButton" class="outline-button" type="button">↧ INSTALL APP</button>
+      </div>
+    </header>
+    <div class="ticker-ribbon" aria-label="Market movement summary" id="tickerRibbon"><span>ACQUIRING MARKET SNAPSHOT...</span></div>
+    <main class="workbench">
+      <aside class="side-panel watch-panel" id="watchPanel" aria-label="Personal watchlist">
+        <div class="panel-head"><div><div class="eyebrow">01 / PERSONAL TERMINAL</div><h2>WATCHLIST<span class="heading-caret">_</span></h2></div><span class="head-tag" id="watchCount">00</span></div>
+        <div class="panel-note">Your tracked symbols · saved on this device</div>
+        <div class="watch-items" id="watchItems"></div>
+        <button class="panel-add" id="watchAddButton" type="button">+ ADD SYMBOL <span>↵</span></button>
+        <div class="panel-foot"><span class="green-square"></span> SYMBOLS WITH A LATEST MARKET CLOSE<span id="trackedTime"></span></div>
+      </aside>
+      <section class="matrix-panel" id="rainPanel" aria-label="Market category falling stocks">
+        <div class="matrix-topbar"><div class="matrix-title"><span class="matrix-led"></span> MARKET DATA STREAM <span class="matrix-path">/ DAILY CHANGE VS PREVIOUS CLOSE</span></div><div class="matrix-totals" id="matrixTotals">-- ADVANCING / -- DECLINING</div></div>
+        <div class="rain-columns" id="rainColumns" aria-label="Animated stock tickers grouped by category"></div>
+        <div class="matrix-bottombar"><span>↑ ADVANCING <i class="legend-green"></i> &nbsp; ↓ DECLINING <i class="legend-red"></i> &nbsp; — UNCHANGED <i class="legend-neutral"></i></span><span>SWIPE SECTORS ↔ · SELECT A FALLING SYMBOL <span class="arrow">↗</span></span></div>
+      </section>
+      <aside class="side-panel radar-panel" id="radarPanel" aria-label="Opportunity scanner">
+        <div class="panel-head"><div><div class="eyebrow">02 / SIGNAL ANALYSIS</div><h2>RADAR<span class="heading-caret blue">_</span></h2></div><span class="radar-icon" aria-hidden="true">◎</span></div>
+        <div class="panel-note">Rule-based research candidates <span class="blue-pip">◆</span></div>
+        <div class="radar-filter"><span>LOW 52-WEEK POSITION</span><span>+ RSI / MOMENTUM</span></div>
+        <div class="radar-items" id="radarItems"></div>
+        <div class="radar-disclaimer">NOT BUY RECOMMENDATIONS. SCANNER FLAGS TECHNICAL CONDITIONS ONLY; VERIFY INDEPENDENTLY.</div>
+        <div class="panel-foot blue-foot"><span class="blue-square"></span> SCAN RANKS ARE RELATIVE TO COVERED STOCKS</div>
+      </aside>
+    </main>
+    <div class="terminal-wrap">
+      <div class="terminal-meta"><div><span class="terminal-led"></span> COMMAND INTERFACE <span class="muted">/ TYPE A SYMBOL OR COMMAND</span></div><div><kbd>/</kbd> FOCUS <kbd>ESC</kbd> CLOSE <kbd>?</kbd> HELP</div></div>
+      <form id="commandForm" class="command-form" autocomplete="off"><label for="commandInput" class="command-prompt">MR<span>://</span></label><input id="commandInput" type="text" inputmode="search" spellcheck="false" autocapitalize="characters" aria-label="Stock ticker or command" placeholder="TYPE A TICKER (NVDA) OR 'HELP' ..." maxlength="80"><button type="submit">EXECUTE ↵</button></form>
+      <div class="terminal-feedback"><div class="feedback" id="terminalFeedback" aria-live="polite">SYSTEM READY. TYPE HELP TO SEE COMMANDS.</div><div class="key-commands"><button type="button" data-command="HELP">HELP</button><button type="button" data-command="SCAN">SCAN</button><button type="button" data-command="LIST">LIST</button></div></div>
+    </div>
+    <nav class="mobile-tabs" aria-label="Mobile views"><button data-tab="watch" type="button">☆ <span>WATCH</span></button><button data-tab="rain" type="button" class="active">▥ <span>RAIN</span></button><button data-tab="radar" type="button">◎ <span>RADAR</span></button></nav>
+  </div>
+  <div class="overlay" id="detailOverlay" hidden><div class="overlay-shade" data-close="detail"></div><section class="detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><button type="button" class="close-dialog" id="detailClose" aria-label="Close stock details">✕</button><div id="detailContent"></div></section></div>
+  <div class="overlay" id="helpOverlay" hidden><div class="overlay-shade" data-close="help"></div><section class="small-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><button type="button" class="close-dialog" data-close="help" aria-label="Close">✕</button><div id="helpContent"></div></section></div>
+  <div class="overlay" id="settingsOverlay" hidden><div class="overlay-shade" data-close="settings"></div><section class="small-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><button type="button" class="close-dialog" data-close="settings" aria-label="Close">✕</button><div class="dialog-eyebrow">MARKET RAIN // LOCAL SETTINGS</div><h2 id="settingsTitle">DISPLAY PARAMETERS</h2><div class="settings-group"><label for="densitySelect">BACKGROUND CODE DENSITY</label><select id="densitySelect"><option value="low">LOW / SAVE POWER</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></div><div class="settings-group"><label for="speedSelect">FALLING STOCK SPEED</label><select id="speedSelect"><option value="slow">SLOW</option><option value="normal">NORMAL</option><option value="fast">FAST</option></select></div><label class="setting-toggle"><input type="checkbox" id="motionToggle"><span>ENABLE ANIMATIONS</span></label><p class="setting-note">Your watchlist and display settings are stored only in this browser. Motion is disabled automatically when your device requests reduced motion.</p></section></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
