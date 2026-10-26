@@ -1,4 +1,4 @@
-/* MARKET RAIN v1.1 — data itself is the code rain; GitHub Pages PWA */
+/* MARKET RAIN v1.2 — denser code rain with periodic ticker bursts; GitHub Pages PWA */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -140,7 +140,7 @@
     const move=validNum(stock?.change_pct)?pct(stock.change_pct):'--';
     return `${ticker}|${price}|${move}|`;
   };
-  const streamGap = () => ({low:25,medium:17,high:12}[state.density]||17);
+  const streamGap = () => ({low:20,medium:14,high:9}[state.density]||14);
   const moveScale = () => ({slow:0.55,normal:1,fast:1.75}[state.speed]||1);
 
   function renderRain(){
@@ -217,14 +217,14 @@
       entry.canvas.style.width=w+'px';entry.canvas.style.height=h+'px';
       entry.ctx.setTransform(ratio,0,0,ratio,0,0);
       entry.w=w;entry.h=h;
-      const count=entry.tickers.length?Math.max(entry.tickers.length,Math.floor(w/desiredGap)):0;
-      entry.gap=w/count;entry.rowHeight=clamp(desiredGap*.92,11,16);
+      const count=entry.tickers.length?Math.max(Math.ceil(entry.tickers.length*1.25),Math.floor(w/desiredGap)):0;
+      entry.gap=w/Math.max(1,count);entry.rowHeight=clamp(desiredGap*.90,10,15);
       const prior=entry.columns;
       entry.columns=Array.from({length:count},(_,i)=>{
         const ticker=entry.tickers[i%entry.tickers.length];
         const old=prior[i];
         const seed=hash(`${entry.lane.dataset.category}-${i}-${ticker}`);
-        const length=12+seed%16;
+        const length=15+seed%18;
         const packet=packetFor(ticker);
         return {
           ticker,packet,ink:rainInk[movement(getStock(ticker)?.change_pct)],
@@ -232,7 +232,8 @@
           // Y is the bright leading glyph; the letters in the trail are real ticker data.
           y:old&&old.ticker===ticker&&entry.h>0?clamp(old.y, -length*entry.rowHeight, h+length*entry.rowHeight):55+(seed%Math.max(1,h-65)),
           velocity:(.62+(seed%73)/100)*moveScale(),
-          phase:(seed>>>7)%packet.length
+          phase:(seed>>>7)%packet.length,
+          tickerLength:ticker.length
         };
       });
     }
@@ -257,13 +258,20 @@
         for(let k=stream.length-1;k>=0;k--){
           const yy=stream.y-k*rowHeight;
           if(yy<52||yy>h)continue;
-          const symbol=stream.packet[(stream.phase-k+stream.packet.length*10)%stream.packet.length];
+          const packetIndex=(stream.phase-k+stream.packet.length*10)%stream.packet.length;
+          const symbol=stream.packet[packetIndex];
           const proximity=1-k/stream.length;
-          const alpha=Math.pow(proximity,1.45)*.87+.035;
+          let alpha=Math.pow(proximity,1.45)*.87+.035;
+          const inTicker=packetIndex<stream.tickerLength;
+          const tickerPulse=inTicker && ((Math.floor((stream.y/rowHeight)+k+(stream.seed%17))%31)<4);
+          const isLead=k===0;
           // The packet delimiters remain subtle, while ticker and price digits carry the stream.
-          ctx.fillStyle=`rgba(${r},${g},${b},${symbol==='|'?alpha*.35:alpha})`;
-          ctx.shadowBlur=k===0?11:k<3?4:0;
-          ctx.shadowColor=`rgb(${r},${g},${b})`;
+          if(tickerPulse) alpha=Math.min(1,alpha*1.85);
+          ctx.fillStyle=tickerPulse && !isLead
+            ? (stream.ink===rainInk.down ? `rgba(255,235,240,${alpha})` : `rgba(234,255,244,${alpha})`)
+            : `rgba(${r},${g},${b},${symbol==='|'?alpha*.35:alpha})`;
+          ctx.shadowBlur=isLead?12:(tickerPulse?7:(k<3?4:0));
+          ctx.shadowColor=tickerPulse?`rgba(255,255,255,0.8)`: `rgb(${r},${g},${b})`;
           ctx.fillText(symbol,stream.x,yy);
         }
         if(stream.y>=53&&stream.y<h){

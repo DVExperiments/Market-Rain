@@ -97,3 +97,10 @@ In v1.0, independent floating stock cards moved in front of random green/red Mat
 **v1.1 removes both visual layers and replaces them with a single stock-code renderer.** Each stock is assigned a thin vertical stream. Its ticker, cached price and percentage movement loop through that stream as falling characters, with a bright leading head and dimmer tail. Color encodes daily direction; the stream's movement is decorative. Tap/click a character stream to open the stock’s normal detail dialog, or use the bottom command console.
 
 For best results, choose **MEDIUM** density on desktop or **HIGH** for a denser, more cinematic rain. On phones, swipe horizontally across sector columns. All existing backend updater, watchlist, radar, charts, dividend records and PWA functionality remain unchanged.
+
+
+## v1.2 update
+
+- Increased stock-rain population so the matrix field feels fuller across categories.
+- Added periodic brighter ticker bursts inside streams so stock symbols stand out more often.
+- Slightly lengthened streams and tightened spacing for a denser, more immersive terminal look.
