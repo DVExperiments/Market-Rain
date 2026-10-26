@@ -21,7 +21,7 @@
     <header class="topbar">
       <div class="identity">
         <div class="mark" aria-hidden="true"><span>M</span><span>R</span></div>
-        <div class="brand"><div class="brand-name">MARKET<span>RAIN</span><sup>1.0</sup></div><div class="brand-sub">STOCK INTELLIGENCE // VISUAL TERMINAL</div></div>
+        <div class="brand"><div class="brand-name">MARKET<span>RAIN</span><sup>1.1</sup></div><div class="brand-sub">STOCK INTELLIGENCE // DATA RAIN</div></div>
       </div>
       <div class="top-status"><span class="pulse-dot"></span><span id="sourceFlag">INITIALISING</span><span class="status-separator">/</span><span id="lastUpdated">LOADING DATA</span></div>
       <div class="top-actions">
@@ -41,8 +41,8 @@
       </aside>
       <section class="matrix-panel" id="rainPanel" aria-label="Market category falling stocks">
         <div class="matrix-topbar"><div class="matrix-title"><span class="matrix-led"></span> MARKET DATA STREAM <span class="matrix-path">/ DAILY CHANGE VS PREVIOUS CLOSE</span></div><div class="matrix-totals" id="matrixTotals">-- ADVANCING / -- DECLINING</div></div>
-        <div class="rain-columns" id="rainColumns" aria-label="Animated stock tickers grouped by category"></div>
-        <div class="matrix-bottombar"><span>↑ ADVANCING <i class="legend-green"></i> &nbsp; ↓ DECLINING <i class="legend-red"></i> &nbsp; — UNCHANGED <i class="legend-neutral"></i></span><span>SWIPE SECTORS ↔ · SELECT A FALLING SYMBOL <span class="arrow">↗</span></span></div>
+        <div class="rain-columns" id="rainColumns" aria-label="Falling Matrix code made entirely from stock tickers, prices and changes, grouped by sector"></div><div class="stream-tooltip" id="streamTooltip" hidden></div>
+        <div class="matrix-bottombar"><span>↑ ADVANCING <i class="legend-green"></i> &nbsp; ↓ DECLINING <i class="legend-red"></i> &nbsp; — UNCHANGED <i class="legend-neutral"></i></span><span>SWIPE SECTORS ↔ · TAP A DATA STREAM <span class="arrow">↗</span></span></div>
       </section>
       <aside class="side-panel radar-panel" id="radarPanel" aria-label="Opportunity scanner">
         <div class="panel-head"><div><div class="eyebrow">02 / SIGNAL ANALYSIS</div><h2>RADAR<span class="heading-caret blue">_</span></h2></div><span class="radar-icon" aria-hidden="true">◎</span></div>
@@ -62,7 +62,7 @@
   </div>
   <div class="overlay" id="detailOverlay" hidden><div class="overlay-shade" data-close="detail"></div><section class="detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detailTitle"><button type="button" class="close-dialog" id="detailClose" aria-label="Close stock details">✕</button><div id="detailContent"></div></section></div>
   <div class="overlay" id="helpOverlay" hidden><div class="overlay-shade" data-close="help"></div><section class="small-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle"><button type="button" class="close-dialog" data-close="help" aria-label="Close">✕</button><div id="helpContent"></div></section></div>
-  <div class="overlay" id="settingsOverlay" hidden><div class="overlay-shade" data-close="settings"></div><section class="small-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><button type="button" class="close-dialog" data-close="settings" aria-label="Close">✕</button><div class="dialog-eyebrow">MARKET RAIN // LOCAL SETTINGS</div><h2 id="settingsTitle">DISPLAY PARAMETERS</h2><div class="settings-group"><label for="densitySelect">BACKGROUND CODE DENSITY</label><select id="densitySelect"><option value="low">LOW / SAVE POWER</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></div><div class="settings-group"><label for="speedSelect">FALLING STOCK SPEED</label><select id="speedSelect"><option value="slow">SLOW</option><option value="normal">NORMAL</option><option value="fast">FAST</option></select></div><label class="setting-toggle"><input type="checkbox" id="motionToggle"><span>ENABLE ANIMATIONS</span></label><p class="setting-note">Your watchlist and display settings are stored only in this browser. Motion is disabled automatically when your device requests reduced motion.</p></section></div>
+  <div class="overlay" id="settingsOverlay" hidden><div class="overlay-shade" data-close="settings"></div><section class="small-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><button type="button" class="close-dialog" data-close="settings" aria-label="Close">✕</button><div class="dialog-eyebrow">MARKET RAIN // LOCAL SETTINGS</div><h2 id="settingsTitle">DISPLAY PARAMETERS</h2><div class="settings-group"><label for="densitySelect">STOCK DATA STREAM DENSITY</label><select id="densitySelect"><option value="low">LOW / SAVE POWER</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></div><div class="settings-group"><label for="speedSelect">CODE RAIN FALL SPEED</label><select id="speedSelect"><option value="slow">SLOW</option><option value="normal">NORMAL</option><option value="fast">FAST</option></select></div><label class="setting-toggle"><input type="checkbox" id="motionToggle"><span>ENABLE ANIMATIONS</span></label><p class="setting-note">Your watchlist and display settings are stored only in this browser. Motion is disabled automatically when your device requests reduced motion.</p></section></div>
   <script src="./app.js" defer></script>
 </body>
 </html>

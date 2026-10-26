@@ -1,6 +1,6 @@
-# MARKET RAIN v1.0
+# MARKET RAIN v1.1 — Stock Data Is the Matrix Rain
 
-**A Matrix-inspired stock research terminal for GitHub Pages.** Stock symbols and daily price movements fall through category columns. Green means the latest daily close was up on the prior session; red means it was down. A watchlist sits on the left, a blue research scanner on the right, and a keyboard-driven ticker console along the bottom.
+**A Matrix-inspired stock research terminal for GitHub Pages.** Every falling character is sourced from a stock symbol, its latest cached price, or its daily percentage change. There is **no separate randomly generated Matrix-text background**, no boxed ticker cards, and no independent overlay; actual tracked stock data forms the rain itself. Green means the latest daily close was up on the prior session; red means it was down. A watchlist sits on the left, a blue research scanner on the right, and a keyboard-driven ticker console along the bottom.
 
 ## Launch on GitHub Pages — direct upload
 
@@ -16,12 +16,13 @@
 ## What works
 
 - Seven animated category lanes: Technology, Financials, Energy, Healthcare, Consumer, Industrials and New Zealand (NZX).
-- Falling ticker symbols show the actual sign of the latest daily close change once the updater has run; animated characters are decorative, not prices.
+- **v1.1 data-driven Matrix streams:** each fine vertical stream represents a tracked stock, repeating its **ticker / price / daily percentage change** one character at a time. A bright leading glyph travels downward with a fading tail. Green streams correspond to rising shares, red to falling, and neutral to unchanged. The *animation* is artistic, but the character packets use the numbers from the downloaded snapshot.
+- **Hover or tap a stream** to identify the stock and open its price chart, company details and dividends. A hover readout shows ticker, price and percentage. Keyboard and screen-reader users can reach a focused symbol list inside each sector lane, or use the command console.
 - A persistent personal watchlist stored in the browser and a responsive mobile Watch / Rain / Radar navigation.
 - A blue **RADAR** screening panel combining 52-week price-range position and a 14-period RSI. It is not a predictive model, buy rating or recommendation.
 - Stock detail dialog: price, previous close, 52-week high/low, session volume, interactive 1M/3M/6M/1Y historical charts and most recent recorded dividends.
 - Command console: `AAPL`, `Apple` (company name), `WATCH AAPL`, `UNWATCH AAPL`, `LIST`, `SCAN`, `TECH`, `NZX`, `PAUSE`, `RESUME`, `INSTALL`, `HELP`. Use `/` to focus, `?` for help, `Esc` to close.
-- Settings for rain density, speed and pause. The site respects reduced-motion preferences.
+- Settings for **stock stream density**, rain speed and pause. The site respects reduced-motion preferences; pausing freezes the data rain itself instead of replacing it with random static code.
 - Progressive Web App (PWA) with a custom icon, HTTPS-based installation and an offline cache. The service worker is configured for subpaths on GitHub Pages.
 - Fetch failures retain the previous **real** snapshot per ticker, clearly flagging it as stale; if all sources fail, the updater does not overwrite existing data.
 
@@ -53,8 +54,8 @@ The updater uses **daily unadjusted OHLC closes**, not a streaming live quote. T
 
 ```text
 index.html                 Single-page frontend
-styles.css                 Responsive Matrix interface
-app.js                     Rain, terminal, scanner, charts, settings
+styles.css                 Responsive Matrix interface and stream hover
+app.js                     Single-layer stock-data rain, terminal, scanner, charts, settings
 manifest.webmanifest       Installable standalone PWA manifest
 sw.js                      Offline caching / refresh
 icons/                     Favicon, Apple, Android & maskable icons
@@ -73,7 +74,7 @@ For local web testing (not necessary when deploying), run `python -m http.server
 ## Scope and known limitations (v1.0)
 
 - The optional market feed is **not a licensed real-time feed**. GitHub Actions refreshes the cached data on a schedule, and third-party fetches can fail or be delayed.
-- The animated digits are an art layer. Stock symbols/changes themselves are from the snapshot, and do not change between updates.
+- The falling glyphs are sourced from each stock’s ticker, snapshot price and percentage move. Their **motion** does not represent individual transactions or price ticks; values change only when the downloaded snapshot changes.
 - The console searches a curated universe; arbitrary new symbols need `config/stocks.json` edits and a data refresh.
 - Pricing and dividends are in the source ticker's listing currency and are not converted into NZD.
 - No brokerage connection, placing trades, user account, cross-device sync, or alerts in v1.0.
@@ -87,3 +88,12 @@ For local web testing (not necessary when deploying), run `python -m http.server
 - If the workflow finishes with a **403 / permission denied** while committing, check **Settings → Actions → General → Workflow permissions** and allow workflow write permissions (where your repository policy permits it). The YAML requests `contents: write`.
 - If the workflow says **Every source request failed**, the third-party provider was unavailable or blocked. Your existing usable `data/quotes.json` stays intact. Retry manually or switch to a supported/licensed feed.
 - A successful GitHub Action that has committed a snapshot might still take a short period to appear on GitHub Pages due to site deployment and browser caching. Reload or reopen the PWA to fetch the updated snapshot.
+
+
+## What changed in v1.1
+
+In v1.0, independent floating stock cards moved in front of random green/red Matrix background glyphs. That made the code rain effectively a wallpaper.
+
+**v1.1 removes both visual layers and replaces them with a single stock-code renderer.** Each stock is assigned a thin vertical stream. Its ticker, cached price and percentage movement loop through that stream as falling characters, with a bright leading head and dimmer tail. Color encodes daily direction; the stream's movement is decorative. Tap/click a character stream to open the stock’s normal detail dialog, or use the bottom command console.
+
+For best results, choose **MEDIUM** density on desktop or **HIGH** for a denser, more cinematic rain. On phones, swipe horizontally across sector columns. All existing backend updater, watchlist, radar, charts, dividend records and PWA functionality remain unchanged.

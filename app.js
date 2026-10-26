@@ -1,4 +1,4 @@
-/* MARKET RAIN v1.0 — no dependencies, static hosting, offline-capable PWA */
+/* MARKET RAIN v1.1 — data itself is the code rain; GitHub Pages PWA */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -7,7 +7,7 @@
   const DEFAULT_WATCH = ['AAPL', 'NVDA', 'MSFT', 'FPH.NZ', 'TSLA'];
   const PALETTE = {up:'#2fff99',down:'#ff526b',flat:'#b2bfa3'};
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let cfg = null, feed = null, catalog = new Map(), raf = null, canvases = [], tickerSpecs = [];
+  let cfg = null, feed = null, catalog = new Map(), raf = null, canvases = [];
   let deferredInstall = null, chartRange = '3M', selectedTicker = null;
   let rainLast = 0, activeOverlay = null;
   const readStorage = () => {try{return JSON.parse(localStorage.getItem(STORE_KEY))||{};}catch{return {};}};
@@ -65,7 +65,7 @@
     updateMotion();updateTab();save();
     // On small screens the Rain tab is hidden until updateTab sets display:flex.
     // Measure canvases only after the layout becomes visible.
-    requestAnimationFrame(()=>{setupCanvases();if(state.paused)drawStillRain();});
+    requestAnimationFrame(()=>{setupCanvases();});
     if(selectedTicker && getStock(selectedTicker))renderDetails(selectedTicker);
   }
   function renderStatus(){
@@ -129,82 +129,157 @@
     });
   }
   function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),16777619);}return h>>>0;}
-  function durationFor(ticker){const scale={slow:1.5,normal:1,fast:.58}[state.speed];return (22+(hash(ticker)%12))*scale;}
+  // Each falling glyph belongs to the actual stock assigned to its stream.
+  // There is no random Matrix-character wallpaper behind separate ticker labels.
+  // The visible character packets cycle SYMBOL / PRICE / DAILY CHANGE, read top-to-bottom.
+  const rainInk = {
+    up:[47,255,153],down:[255,79,109],flat:[185,201,185]
+  };
+  const packetFor = ticker => {
+    const stock=getStock(ticker),price=validNum(stock?.price)?num(stock.price,2):'--';
+    const move=validNum(stock?.change_pct)?pct(stock.change_pct):'--';
+    return `${ticker}|${price}|${move}|`;
+  };
+  const streamGap = () => ({low:25,medium:17,high:12}[state.density]||17);
+  const moveScale = () => ({slow:0.55,normal:1,fast:1.75}[state.speed]||1);
+
   function renderRain(){
-    const container=$('rainColumns');container.innerHTML='';canvases=[];tickerSpecs=[];
+    const container=$('rainColumns');container.innerHTML='';canvases=[];
+    hideStreamTooltip();
     for(const category of cfg.categories){
       const lane=document.createElement('div');lane.className='rain-lane';lane.dataset.category=category.id;
-      const canvas=document.createElement('canvas');canvas.className='rain-canvas';canvas.setAttribute('aria-hidden','true');lane.appendChild(canvas);
+      const canvas=document.createElement('canvas');canvas.className='rain-canvas';
+      canvas.setAttribute('aria-label',`${category.label} animated stock-data code rain. Point to or tap a falling stream for the ticker details; quotes are from the cached market snapshot.`);
+      lane.appendChild(canvas);
       const fade=document.createElement('div');fade.className='rain-fade';lane.appendChild(fade);
       const catTickers=getCategoryTickers(category);
       const catHtml=document.createElement('div');catHtml.className='lane-top';catHtml.innerHTML=`<b>${safe(category.short||category.label)}</b><span>${String(catTickers.length).padStart(2,'0')} SYMBOLS</span>`;
       lane.appendChild(catHtml);
       if(!catTickers.length){const empty=document.createElement('div');empty.className='empty-state';empty.textContent='NO DATA';lane.appendChild(empty);}
-      catTickers.forEach((ticker,index)=>{
-        const stock=getStock(ticker);const motionClass=movement(stock.change_pct);
-        for(let copy=0;copy<2;copy++){
-          const node=document.createElement('button');node.type='button';node.className=`falling-stock ${motionClass}${copy?' compact':''}`;
-          node.innerHTML=`<span class="symbol">${safe(ticker)}</span><span class="move">${pct(stock.change_pct)}</span>`;
-          node.title=`${getName(ticker)}: ${pct(stock.change_pct)}; click for details`;
-          const dur=durationFor(ticker)*(copy?1.18:1);
-          const stagger=index*dur/Math.max(1,catTickers.length);
-          const x=copy? 18+(hash(ticker+'b')%9):3+(hash(ticker)%9);
-          node.style.setProperty('--duration',dur+'s');node.style.setProperty('--delay',`-${(stagger+copy*dur*.49).toFixed(1)}s`);node.style.setProperty('--x',x+'%');
-          node.addEventListener('click',()=>openDetails(ticker));lane.appendChild(node);
-          tickerSpecs.push({node,ticker,copy});
-        }
+      // The streams themselves are selectable. These hidden buttons supply keyboard and screen-reader access.
+      const list=document.createElement('div');list.className='stream-access-list';
+      catTickers.forEach(ticker=>{
+        const btn=document.createElement('button');btn.type='button';btn.textContent=`Open ${ticker}, ${getName(ticker)}; ${pct(getStock(ticker)?.change_pct)}`;
+        btn.addEventListener('click',()=>openDetails(ticker));list.appendChild(btn);
       });
-      container.appendChild(lane);canvases.push({canvas,lane,ctx:canvas.getContext('2d',{alpha:true}),columns:[],palette:catTickers.map(t=>movement(getStock(t)?.change_pct))});
+      lane.appendChild(list);
+      container.appendChild(lane);
+      const entry={canvas,lane,ctx:canvas.getContext('2d',{alpha:false}),tickers:catTickers,columns:[],w:0,h:0,gap:17};
+      canvas.addEventListener('pointermove',e=>{
+        const hit=streamAtPointer(entry,e);
+        canvas.style.cursor=hit?'pointer':'default';
+        if(hit)showStreamTooltip(hit.ticker,e);else hideStreamTooltip();
+      });
+      canvas.addEventListener('pointerleave',hideStreamTooltip);
+      canvas.addEventListener('click',e=>{const hit=streamAtPointer(entry,e);if(hit){hideStreamTooltip();openDetails(hit.ticker);}});
+      canvases.push(entry);
     }
     setupCanvases();
     if(raf!==null)cancelAnimationFrame(raf);raf=null;rainLast=0;
-    if(!state.paused)raf=requestAnimationFrame(drawRain);
-    else drawStillRain();
+    if(state.paused)drawDataRain();else raf=requestAnimationFrame(drawRain);
+  }
+  function showStreamTooltip(ticker,event){
+    const tooltip=$('streamTooltip'),panel=$('rainPanel');
+    if(!tooltip||!panel)return;
+    const stock=getStock(ticker),direction=movement(stock?.change_pct);
+    tooltip.replaceChildren();
+    const first=document.createElement('strong');first.className=direction;first.textContent=ticker;
+    const price=document.createElement('span');price.textContent=stock?`${num(stock.price)} ${stock.currency||''}`:'—';
+    const change=document.createElement('span');change.className=direction;change.textContent=pct(stock?.change_pct);
+    tooltip.append(first,price,change);
+    const box=panel.getBoundingClientRect();
+    tooltip.style.left=`${clamp(event.clientX-box.left+12,8,Math.max(8,box.width-180))}px`;
+    tooltip.style.top=`${clamp(event.clientY-box.top-56,55,Math.max(55,box.height-65))}px`;
+    tooltip.hidden=false;
+  }
+  function hideStreamTooltip(){const el=$('streamTooltip');if(el)el.hidden=true;}
+  function streamAtPointer(entry,event){
+    if(!entry.tickers.length)return null;
+    const rect=entry.canvas.getBoundingClientRect();
+    const x=event.clientX-rect.left,y=event.clientY-rect.top;
+    if(y<51)return null;
+    const maxDist=Math.max(10,entry.gap*.70);
+    let closest=null,best=maxDist;
+    for(const stream of entry.columns){
+      const d=Math.abs(stream.x-x);
+      if(d<best&&y>=stream.y-(stream.length-1)*entry.rowHeight-9&&y<=stream.y+10){closest=stream;best=d;}
+    }
+    return closest;
   }
   function setupCanvases(){
-    const step={low:23,medium:16,high:12}[state.density];
+    const desiredGap=streamGap();
     for(const entry of canvases){
-      const w=Math.max(1,entry.lane.clientWidth),h=Math.max(1,entry.lane.clientHeight),dpr=Math.min(2,window.devicePixelRatio||1);
-      entry.canvas.width=Math.ceil(w*dpr);entry.canvas.height=Math.ceil(h*dpr);entry.canvas.style.width=w+'px';entry.canvas.style.height=h+'px';
-      entry.ctx.setTransform(dpr,0,0,dpr,0,0);entry.ctx.fillStyle='#06120c';entry.ctx.fillRect(0,0,w,h);
-      entry.w=w;entry.h=h;entry.step=step;
-      entry.columns=Array.from({length:Math.max(1,Math.floor(w/step))},(_,i)=>({x:i*step+1,y:(hash(entry.lane.dataset.category+':'+i)%Math.max(h,1))-h,speed:1+(hash('speed:'+i+entry.lane.dataset.category)%40)/30,kind:entry.palette[i%Math.max(1,entry.palette.length)]||'flat'}));
-      entry.lane.style.setProperty('--travel',h+'px');
+      const rect=entry.lane.getBoundingClientRect(),w=Math.max(1,Math.round(rect.width)),h=Math.max(1,Math.round(rect.height));
+      // Hidden tabs measure at 1px. They are rebuilt once their panel is visible.
+      if(w<20||h<50)continue;
+      const ratio=Math.min(2,window.devicePixelRatio||1);
+      entry.canvas.width=Math.ceil(w*ratio);entry.canvas.height=Math.ceil(h*ratio);
+      entry.canvas.style.width=w+'px';entry.canvas.style.height=h+'px';
+      entry.ctx.setTransform(ratio,0,0,ratio,0,0);
+      entry.w=w;entry.h=h;
+      const count=entry.tickers.length?Math.max(entry.tickers.length,Math.floor(w/desiredGap)):0;
+      entry.gap=w/count;entry.rowHeight=clamp(desiredGap*.92,11,16);
+      const prior=entry.columns;
+      entry.columns=Array.from({length:count},(_,i)=>{
+        const ticker=entry.tickers[i%entry.tickers.length];
+        const old=prior[i];
+        const seed=hash(`${entry.lane.dataset.category}-${i}-${ticker}`);
+        const length=12+seed%16;
+        const packet=packetFor(ticker);
+        return {
+          ticker,packet,ink:rainInk[movement(getStock(ticker)?.change_pct)],
+          x:(i+.5)*entry.gap,seed,length,
+          // Y is the bright leading glyph; the letters in the trail are real ticker data.
+          y:old&&old.ticker===ticker&&entry.h>0?clamp(old.y, -length*entry.rowHeight, h+length*entry.rowHeight):55+(seed%Math.max(1,h-65)),
+          velocity:(.62+(seed%73)/100)*moveScale(),
+          phase:(seed>>>7)%packet.length
+        };
+      });
     }
+    drawDataRain();
   }
-  const letters='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZアイウエカキクケサタナハマヤラワ';
-  function drawFrame(){
+  function drawDataRain(delta=0){
     for(const entry of canvases){
-      const {ctx,w,h,step,columns}=entry;if(!ctx||!w||!h)continue;
-      ctx.fillStyle='rgba(5,15,9,0.19)';ctx.fillRect(0,49,w,h-49);
-      ctx.font=`${Math.max(10,step-2)}px monospace`;ctx.textAlign='left';
-      for(let index=0;index<columns.length;index++){
-        const col=columns[index];col.y+=(step*.38*col.speed);
-        if(col.y>h+step*15)col.y=-(hash(String(index)+Math.floor(performance.now()/2000))%15+2)*step;
-        const glyph=letters[(Math.random()*letters.length)|0];
-        const primary=col.kind==='up'?[39,255,144]:col.kind==='down'?[255,67,102]:[122,175,135];
-        ctx.shadowBlur=index%4===0?6:0;ctx.shadowColor=`rgb(${primary.join(',')})`;
-        ctx.fillStyle=`rgba(${primary[0]},${primary[1]},${primary[2]},${index%8===0?.9:.54})`;
-        if(col.y>49)ctx.fillText(glyph,col.x,col.y);
+      const {ctx,w,h,columns,rowHeight}=entry;
+      if(!ctx||!w||!h||!rowHeight)continue;
+      ctx.fillStyle='#040b09';ctx.fillRect(0,0,w,h);
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font=`700 ${Math.max(11,Math.min(14,rowHeight*.92))}px Consolas, Menlo, monospace`;
+      for(const stream of columns){
+        if(delta>0){
+          stream.y+=delta*stream.velocity;
+          if(stream.y-(stream.length-1)*rowHeight>h+16){
+            stream.y=48-(3+stream.seed%9)*rowHeight;
+            stream.phase=(stream.phase+7)%stream.packet.length;
+          }
+        }
+        const [r,g,b]=stream.ink;
+        for(let k=stream.length-1;k>=0;k--){
+          const yy=stream.y-k*rowHeight;
+          if(yy<52||yy>h)continue;
+          const symbol=stream.packet[(stream.phase-k+stream.packet.length*10)%stream.packet.length];
+          const proximity=1-k/stream.length;
+          const alpha=Math.pow(proximity,1.45)*.87+.035;
+          // The packet delimiters remain subtle, while ticker and price digits carry the stream.
+          ctx.fillStyle=`rgba(${r},${g},${b},${symbol==='|'?alpha*.35:alpha})`;
+          ctx.shadowBlur=k===0?11:k<3?4:0;
+          ctx.shadowColor=`rgb(${r},${g},${b})`;
+          ctx.fillText(symbol,stream.x,yy);
+        }
+        if(stream.y>=53&&stream.y<h){
+          ctx.shadowBlur=13;
+          ctx.fillStyle=stream.ink===rainInk.down?'#ffe5e8':'#eafff3';
+          ctx.fillText(stream.packet[stream.phase%stream.packet.length],stream.x,stream.y);
+        }
       }
       ctx.shadowBlur=0;
     }
   }
-  function drawStillRain(){
-    for(const entry of canvases){
-      const {ctx,w,h,step,columns}=entry;if(!ctx)continue;ctx.fillStyle='#07130e';ctx.fillRect(0,0,w,h);
-      ctx.font=`${Math.max(10,step-2)}px monospace`;
-      columns.forEach((col,i)=>{
-        for(let j=0;j<16;j++){const y=55+j*step*1.6+((hash('y:'+i)%11)*7);if(y>h)break;
-          const glyph=letters[hash('glyph'+i+'-'+j)%letters.length];
-          ctx.fillStyle=col.kind==='down'?'#8e303d':col.kind==='up'?'#136c3d':'#38614b';ctx.fillText(glyph,col.x,y);
-        }
-      });
-    }
-  }
   function drawRain(t){
     if(state.paused){raf=null;return;}
-    if(t-rainLast>45){drawFrame();rainLast=t;}
+    if(!rainLast)rainLast=t;
+    const delta=clamp(t-rainLast,0,100)/32;
+    if(t-rainLast>30){drawDataRain(delta);rainLast=t;}
     raf=requestAnimationFrame(drawRain);
   }
   function updateMotion(){
@@ -212,12 +287,12 @@
     const btn=$('pauseButton');btn.textContent=state.paused?'▶':'Ⅱ';btn.title=state.paused?'Resume animation (P)':'Pause animation (P)';
     $('motionToggle').checked=!state.paused;
     $('densitySelect').value=state.density;$('speedSelect').value=state.speed;
-    if(state.paused){if(raf!==null)cancelAnimationFrame(raf);raf=null;drawStillRain();}
-    else if(raf===null)raf=requestAnimationFrame(drawRain);
+    if(state.paused){if(raf!==null)cancelAnimationFrame(raf);raf=null;drawDataRain();}
+    else if(raf===null){rainLast=0;raf=requestAnimationFrame(drawRain);}
   }
   function toggleMotion(){state.paused=!state.paused;save();updateMotion();setFeedback(state.paused?'ANIMATION PAUSED. MARKET DATA IS UNCHANGED.':'ANIMATION RUNNING.','success');}
   function updateTab(){document.querySelector('.app').dataset.tab=state.tab;document.querySelectorAll('.mobile-tabs button').forEach(button=>button.classList.toggle('active',button.dataset.tab===state.tab));}
-  function changeTab(tab){state.tab=tab;updateTab();setTimeout(setupCanvases,60);}
+  function changeTab(tab){state.tab=tab;updateTab();hideStreamTooltip();setTimeout(setupCanvases,60);}
 
   function sliceHistory(item,range){const days={'1M':31,'3M':95,'6M':186,'1Y':367}[range]||95;const hist=(item.history||[]).filter(p=>Array.isArray(p)&&Number.isFinite(Number(p[1]))).map(p=>[String(p[0]),Number(p[1])]);if(!hist.length)return [];
     const lastDate=new Date(hist[hist.length-1][0]+'T12:00:00Z');if(Number.isNaN(lastDate.getTime()))return hist.slice(-70);
@@ -330,8 +405,8 @@
     $('detailClose').addEventListener('click',closeOverlay);
     document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',closeOverlay));
     document.querySelectorAll('.mobile-tabs button').forEach(el=>el.addEventListener('click',()=>changeTab(el.dataset.tab)));
-    $('densitySelect').addEventListener('change',e=>{state.density=e.target.value;save();setupCanvases();if(state.paused)drawStillRain();});
-    $('speedSelect').addEventListener('change',e=>{state.speed=e.target.value;save();tickerSpecs.forEach(spec=>spec.node.style.setProperty('--duration',durationFor(spec.ticker)*(spec.copy?1.18:1)+'s'));});
+    $('densitySelect').addEventListener('change',e=>{state.density=e.target.value;save();setupCanvases();});
+    $('speedSelect').addEventListener('change',e=>{state.speed=e.target.value;save();canvases.forEach(entry=>entry.columns.forEach(stream=>{const seed=stream.seed;stream.velocity=(.62+(seed%73)/100)*moveScale();}));});
     $('motionToggle').addEventListener('change',e=>{state.paused=!e.target.checked;save();updateMotion();});
     document.addEventListener('keydown',e=>{
       const inputActive=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
@@ -340,7 +415,7 @@
       if(e.key.toLowerCase()==='p'&&!inputActive&&!activeOverlay)toggleMotion();
     });
     window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;});
-    window.addEventListener('resize',()=>{clearTimeout(window.__marketResize);window.__marketResize=setTimeout(()=>{setupCanvases();if(state.paused)drawStillRain();},180);});
+    window.addEventListener('resize',()=>{clearTimeout(window.__marketResize);window.__marketResize=setTimeout(()=>{setupCanvases();},180);});
     document.addEventListener('visibilitychange',()=>{if(document.hidden){if(raf!==null)cancelAnimationFrame(raf);raf=null;}else if(!state.paused&&raf===null)raf=requestAnimationFrame(drawRain);});
     // No live API polling; refresh our static GitHub-generated snapshot.
     setInterval(()=>{if(!document.hidden)loadData(false);},10*60*1000);

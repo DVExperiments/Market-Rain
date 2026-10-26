@@ -1,5 +1,5 @@
 /* Scope-relative cache so this works under /RepoName/ on GitHub Pages. */
-const CACHE = 'market-rain-v1.0.1';
+const CACHE = 'market-rain-v1.1.0';
 const CORE = ['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./config/stocks.json','./data/quotes.json','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
